@@ -135,7 +135,7 @@ body {
 .card-header .org-name {
   font-family: 'Oswald', sans-serif; font-size: .6rem; color: #fff;
   letter-spacing: .7px; line-height: 1.25; font-weight: 600;
-  text-transform: uppercase;
+  text-transform: uppercase; text-align: center; flex: 1;
 }
 
 /* VISITOR PASS badge – background colour = dept colour */
@@ -178,9 +178,12 @@ body {
   padding: 0 10px; z-index: 3;
 }
 .card-footer .footer-text { font-size: .52rem; color: rgba(255,255,255,.85); letter-spacing: .4px; }
-.card-footer .return-text {
-  font-family: 'Oswald', sans-serif; font-size: .56rem;
-  color: #ffe082; letter-spacing: 1.2px; font-weight: 600; text-transform: uppercase;
+/* RETURN AFTER USE sits just above the green footer bar */
+.return-after-use {
+  position: absolute; bottom: 28px; left: 0; right: 0;
+  text-align: center; z-index: 3;
+  font-family: 'Oswald', sans-serif; font-size: .54rem;
+  color: #555; letter-spacing: 1.6px; font-weight: 700; text-transform: uppercase;
 }
 
 /* ── BACK CARD ── */
@@ -314,14 +317,14 @@ body {
         <div class="dept-name" id="card-dept-name">—</div>
         <div class="divider-line"></div>
         <div class="tag-row">
-          <span class="tag-label">TAG NO:</span>
           <span class="tag-value" id="card-tag">—</span>
         </div>
       </div>
 
+      <div class="return-after-use">&#9679; RETURN AFTER USE &#9679;</div>
+
       <div class="card-footer">
         <span class="footer-text">www.kirs.gov.ng</span>
-        <span class="return-text">&#9679; RETURN AFTER USE &#9679;</span>
         <span class="footer-text">VISITOR</span>
       </div>
     </div>
@@ -348,7 +351,7 @@ body {
       </div>
 
       <div class="back-footer">
-        <span>&#9993; info@kirs.gov.ng</span>
+        <span>&#9993; <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="c7aea9a1a887acaeb5b4e9a0a8b1e9a9a0">[email&#160;protected]</a></span>
         <span>&#127760; www.kirs.gov.ng</span>
       </div>
     </div>
@@ -362,7 +365,7 @@ body {
 
 </div><!-- /#card-container -->
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 /* ── Department colours ── */
 const DEPT_COLORS = {
   "Executive Chairman's Office":                               "#1a7a1a",
@@ -461,14 +464,4 @@ function downloadBothCards() {
     row.style.cssText = prevStyle;
     const tag  = document.getElementById('card-tag').textContent || 'VISITOR';
     const link = document.createElement('a');
-    link.download = 'KIRS_Visitor_Pass_' + tag + '.png';
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-  }).catch(() => {
-    row.style.cssText = prevStyle;
-    alert('Download failed. Please use the Print button instead.');
-  });
-}
-</script>
-</body>
-</html>
+    link.download = 'KIRS_Visitor_Pass_' + tag + '.
