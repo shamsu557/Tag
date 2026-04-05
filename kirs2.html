@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KIRS Visitor Pass Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Raleway:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+*{ box-sizing:border-box; margin:0; padding:0; }
+
+:root{
+  --G:    #0B3D2E;
+  --G2:   #0f5238;
+  --G3:   #1a6b2f;
+  --GOLD: #B8963A;
+  --GOLD2:#d4b05a;
+  --RED:  #7A0000;
+}
+
+body{
+  font-family:'Montserrat',sans-serif;
+  background: linear-gradient(160deg,#111 0%,#1c2b1c 100%);
+  min-height:100vh;
+  padding:28px 16px;
+}
+
+.shell{ max-width:700px; margin:0 auto; }
+
+/* ── TOP BAR ── */
+.topbar{
+  display:flex; align-items:center; gap:16px;
+  background:linear-gradient(135deg, var(--G) 0%, var(--G2) 100%);
+  border-radius:12px 12px 0 0;
+  padding:18px 24px;
+  border-bottom:4px solid var(--GOLD);
+}
+.topbar img{ width:52px; height:52px; object-fit:contain; }
+.topbar-txt h1{
+  font-family:'Raleway',sans-serif;
+  font-size:1rem; font-weight:900;
+  letter-spacing:2px; text-transform:uppercase; color:#fff;
+}
+.topbar-txt p{ font-size:0.65rem; color:var(--GOLD2); letter-spacing:1.5px; text-transform:uppercase; margin-top:3px; }
+
+/* ── CONTROLS ── */
+.ctrl{
+  background:#0e0e0e; border:1px solid #222;
+  border-radius:0 0 12px 12px;
+  padding:24px; margin-bottom:32px;
+}
+.ctrl-title{
+  font-size:0.62rem; font-weight:800;
+  letter-spacing:3px; text-transform:uppercase;
+  color:var(--GOLD); margin-bottom:16px;
+}
+.frow{ display:flex; gap:14px; flex-wrap:wrap; }
+.fg{ flex:1; min-width:190px; }
+.fg label{
+  display:block; font-size:0.62rem; font-weight:700;
+  letter-spacing:2px; text-transform:uppercase;
+  color:#666; margin-bottom:7px;
+}
+.fg select,.fg input{
+  width:100%; padding:11px 14px;
+  background:#181818; border:1px solid #2e2e2e;
+  border-radius:6px; color:#eee;
+  font-family:'Montserrat',sans-serif; font-size:0.83rem;
+  outline:none; transition:border-color 0.2s;
+}
+.fg select:focus,.fg input:focus{ border-color:var(--GOLD); }
+.fg select option{ background:#181818; }
+
+.btn-gen{
+  width:100%; margin-top:16px; padding:14px;
+  background:linear-gradient(135deg,var(--G),var(--G2));
+  color:#fff; border:none; border-radius:6px;
+  font-family:'Raleway',sans-serif;
+  font-size:0.88rem; font-weight:900;
+  letter-spacing:3px; text-transform:uppercase;
+  cursor:pointer; border-bottom:3px solid var(--GOLD);
+  transition:opacity 0.2s,transform 0.1s;
+}
+.btn-gen:hover{ opacity:0.87; }
+.btn-gen:active{ transform:scale(0.99); }
+
+/* ── PREVIEW ── */
+.pview{ display:none; }
+.pview.on{ display:block; }
+.pview-lbl{
+  text-align:center; font-size:0.6rem; font-weight:700;
+  letter-spacing:3px; text-transform:uppercase;
+  color:#444; margin-bottom:20px;
+}
+
+.tag-outer{
+  display:flex; flex-direction:column;
+  align-items:center; gap:0;
+  margin-bottom:24px;
+}
+
+/* Lanyard hole punch area */
+.lanyard-top{
+  width:70px; height:28px;
+  background:linear-gradient(135deg,var(--G),var(--G2));
+  border-radius:8px 8px 0 0;
+  display:flex; align-items:center; justify-content:center;
+  position:relative;
+  box-shadow:0 -3px 10px rgba(0,0,0,0.4);
+}
+.lanyard-hole{
+  width:18px; height:18px;
+  border-radius:50%;
+  background:#0e0e0e;
+  border:2px solid var(--GOLD);
+  box-shadow:inset 0 1px 3px rgba(0,0,0,0.6);
+}
+
+/* ═══════════════════════
+   BIG EVENT TAG CARD
+   Portrait orientation — like a real lanyard badge
+═══════════════════════ */
+.tag-card{
+  width: 320px;
+  min-height: 460px;
+  border-radius:0 0 14px 14px;
+  overflow:hidden;
+  position:relative;
+  box-shadow:0 16px 50px rgba(0,0,0,0.6), 0 4px 16px rgba(0,0,0,0.4);
+  display:flex; flex-direction:column;
+  background:#fff;
+  border:2px solid #bbb;
+  border-top:none;
+  font-family:'Montserrat',sans-serif;
+}
+
+/* Top gold shimmer line */
+.tag-card::before{
+  content:'';
+  position:absolute;
+  top:0; left:0; right:0; height:4px;
+  background:linear-gradient(90deg, var(--GOLD), #f0d878, var(--GOLD));
+  z-index:10;
+}
+
+/* ── WATERMARK ── */
+.wm{
+  position:absolute; inset:0;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  grid-template-rows:repeat(5,1fr);
+  pointer-events:none; z-index:1; opacity:0.05;
+}
+.wmc{
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:2px;
+}
+.wmc img{ width:36px; height:36px; object-fit:contain; }
+.wmc span{ font-size:6px; font-weight:800; color:var(--G); letter-spacing:1px; }
+
+/* ── HEADER BAND ── */
+.tc-header{
+  position:relative; z-index:3;
+  background:linear-gradient(135deg, var(--G) 0%, var(--G2) 100%);
+  padding:14px 16px 12px;
+  display:flex; flex-direction:column;
+  align-items:center; gap:6px;
+  flex-shrink:0;
+}
+.tc-header-logo{
+  width:58px; height:58px; object-fit:contain;
+  filter:drop-shadow(0 3px 6px rgba(0,0,0,0.4));
+}
+.tc-header-name{
+  font-family:'Raleway',sans-serif;
+  font-size:0.62rem; font-weight:900;
+  letter-spacing:1.5px; text-transform:uppercase;
+  color:#fff; text-align:center; line-height:1.4;
+}
+.tc-header-sub{
+  font-size:0.5rem; font-weight:600;
+  letter-spacing:2px; text-transform:uppercase;
+  color:var(--GOLD2);
+}
+
+/* Gold divider */
+.tc-gold-bar{
+  height:4px; flex-shrink:0;
+  background:linear-gradient(90deg, var(--G), var(--GOLD), var(--G));
+}
+
+/* ── BODY ── */
+.tc-body{
+  position:relative; z-index:2;
+  flex:1; display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  padding:18px 20px 14px;
+  gap:10px;
+}
+
+/* VISITOR PASS badge — large & bold */
+.tc-badge{
+  color:#fff;
+  font-family:'Raleway',sans-serif;
+  font-size:1.5rem; font-weight:900;
+  letter-spacing:5px; text-transform:uppercase;
+  padding:10px 28px;
+  border-radius:6px;
+  text-align:center;
+  width:100%;
+  box-shadow:0 4px 14px rgba(0,0,0,0.25);
+  position:relative;
+}
+.tc-badge::before,.tc-badge::after{
+  content:'◆';
+  font-size:0.6rem;
+  color:var(--GOLD2);
+  position:absolute; top:50%; transform:translateY(-50%);
+  opacity:0.8;
+}
+.tc-badge::before{ left:10px; }
+.tc-badge::after{ right:10px; }
+
+/* Divider */
+.tc-divider{
+  width:85%; height:1.5px;
+  background:linear-gradient(90deg,transparent,var(--GOLD),transparent);
+}
+
+/* Department */
+.tc-dept-label{
+  font-size:0.55rem; font-weight:800;
+  letter-spacing:3px; text-transform:uppercase;
+  color:#999;
+}
+.tc-dept-name{
+  font-family:'Raleway',sans-serif;
+  font-size:0.88rem; font-weight:800;
+  color:var(--G); text-transform:uppercase;
+  letter-spacing:1px; text-align:center;
+  line-height:1.35; padding:0 10px;
+}
+
+/* Divider 2 */
+.tc-divider2{
+  width:60%; height:1px;
+  background:linear-gradient(90deg,transparent,#ccc,transparent);
+}
+
+/* Tag number */
+.tc-tag-label{
+  font-size:0.5rem; font-weight:800;
+  letter-spacing:3px; text-transform:uppercase; color:#aaa;
+}
+.tc-tag-num{
+  font-family:'Raleway',sans-serif;
+  font-size:3rem; font-weight:900;
+  color:#111; letter-spacing:6px;
+  line-height:1; text-align:center;
+}
+
+/* Signature area */
+.tc-sig-area{
+  display:flex; flex-direction:column;
+  align-items:center; gap:0;
+  width:100%; margin-top:4px;
+}
+.tc-sig-img{
+  width:130px; height:44px;
+  object-fit:contain; object-position:center;
+  filter:brightness(0.12);
+  opacity:0.85;
+}
+.tc-sig-line{
+  width:140px; height:1.5px; background:#bbb;
+}
+.tc-sig-lbl{
+  font-size:0.5rem; font-weight:700;
+  letter-spacing:1.5px; text-transform:uppercase;
+  color:#aaa; margin-top:3px;
+}
+
+/* ── RETURN STRIPE ── */
+.tc-return{
+  position:relative; z-index:3;
+  background:linear-gradient(135deg,var(--G),var(--G2));
+  padding:8px 16px;
+  display:flex; align-items:center; justify-content:center;
+  gap:8px; flex-shrink:0;
+}
+.tc-return-text{
+  font-family:'Raleway',sans-serif;
+  font-size:0.68rem; font-weight:900;
+  letter-spacing:3px; text-transform:uppercase; color:#fff;
+}
+.tc-return-dot{ color:var(--GOLD); font-size:0.5rem; }
+
+/* ── FOOTER ── */
+.tc-footer{
+  position:relative; z-index:3;
+  background:var(--G);
+  padding:7px 16px;
+  display:flex; align-items:center;
+  justify-content:space-between; flex-shrink:0;
+  border-top:2px solid var(--GOLD);
+}
+.tc-footer-item{
+  display:flex; align-items:center; gap:4px;
+  color:rgba(255,255,255,0.8); font-size:0.5rem; font-weight:600;
+}
+.tc-footer-icon{ color:var(--GOLD); font-size:0.58rem; }
+.tc-footer-type{
+  font-family:'Raleway',sans-serif;
+  font-size:0.6rem; font-weight:900;
+  letter-spacing:2px; color:var(--GOLD);
+}
+
+/* ── ACTIONS ── */
+.actions{
+  display:flex; gap:14px;
+  justify-content:center; flex-wrap:wrap;
+  margin-top:4px;
+}
+.btn-act{
+  padding:12px 24px; border:none; border-radius:6px;
+  font-family:'Raleway',sans-serif;
+  font-size:0.82rem; font-weight:800;
+  letter-spacing:2px; text-transform:uppercase;
+  cursor:pointer; display:flex; align-items:center; gap:8px;
+  transition:opacity 0.2s,transform 0.1s;
+}
+.btn-act:hover{ opacity:0.85; }
+.btn-act:active{ transform:scale(0.97); }
+.btn-dl{ background:var(--G); color:#fff; border-bottom:3px solid var(--GOLD); }
+.btn-pr{ background:#1a1a1a; color:#fff; border:1px solid #333; }
+
+@media(max-width:480px){
+  .tag-card{ width:88vw; }
+  .tc-tag-num{ font-size:2.2rem; }
+  .tc-badge{ font-size:1.1rem; letter-spacing:3px; }
+  .tc-dept-name{ font-size:0.75rem; }
+}
+
+@media print{
+  body{ background:#fff; padding:0; }
+  .topbar,.ctrl,.actions,.pview-lbl{ display:none!important; }
+  .tag-outer{ margin:0 auto; }
+  .tag-card{ box-shadow:none; }
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <div class="topbar">
+    <img data-role="logo" src="kirslogo.jfif" alt="KIRS" onerror="this.style.display='none'">
+    <div class="topbar-txt">
+      <h1>KIRS Visitor Pass Generator</h1>
+      <p>Kano State Internal Revenue Service — Official Access Tag</p>
+    </div>
+  </div>
+
+  <div class="ctrl">
+    <div class="ctrl-title">Configure Visitor Tag</div>
+
+    <!-- Logo loader -->
+    <div style="margin-bottom:16px;">
+      <div style="font-size:0.62rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#666;margin-bottom:7px;">Logo Image (kirslogo.jfif)</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <label style="padding:9px 16px;background:#181818;border:1px dashed #444;border-radius:6px;color:#aaa;cursor:pointer;font-size:0.75rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;">
+          📁 Choose Logo
+          <input type="file" id="logoInput" accept="image/*" style="display:none">
+        </label>
+        <span id="logoStatus" style="font-size:0.7rem;color:#555;letter-spacing:1px;">No file chosen</span>
+      </div>
+    </div>
+    <div class="frow">
+      <div class="fg">
+        <label for="dept">Department / Unit</label>
+        <select id="dept">
+          <option value="">— Select Department —</option>
+          <option>Executive Chairman</option>
+          <option>Executive Director Corporate Service Group</option>
+          <option>Executive Director Revenue Operation Group</option>
+          <option>Executive Director Finance &amp; Revenue Account Group</option>
+          <option>Assessment Department</option>
+          <option>PAYE Department</option>
+          <option>Government Business Department</option>
+          <option>Human Resource Department</option>
+          <option>Corporate Service Department</option>
+          <option>Legal Services Department</option>
+          <option>Planning, Research &amp; Statistics</option>
+          <option>ICT Unit</option>
+          <option>Headquarter Tax Office</option>
+          <option>Motor Licence Office</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label for="tagno">Tag Number</label>
+        <input type="text" id="tagno" placeholder="e.g. 0001 or ICT-01" maxlength="20">
+      </div>
+    </div>
+    <button class="btn-gen" onclick="generate()">⚡ Generate Visitor Tag</button>
+  </div>
+
+  <div class="pview" id="pview">
+    <div class="pview-lbl">— Preview —</div>
+    <div class="tag-outer" id="tagOuter">
+      <div class="lanyard-top"><div class="lanyard-hole"></div></div>
+      <div id="tagCard"></div>
+    </div>
+    <div class="actions">
+      <button class="btn-act btn-dl" onclick="dlTag()">⬇ Download Tag</button>
+      <button class="btn-act btn-pr" onclick="window.print()">🖨 Print</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const DEPTS = {
+  "Executive Chairman":                           "#7A0000",
+  "Executive Director Corporate Service Group":            "#0B3D2E",
+  "Executive Director Revenue Operation Group":            "#0D1F5C",
+  "Executive Director Finance & Revenue Account Group":    "#7A5C00",
+  "Assessment Department":                                 "#3B006F",
+  "PAYE Department":                                       "#004444",
+  "Government Business Department":                        "#7A3300",
+  "Human Resource Department":                             "#5C003A",
+  "Corporate Service Department":                          "#4A2000",
+  "Legal Services Department":                             "#1F0050",
+  "Planning, Research & Statistics":                       "#7A0040",
+  "ICT Unit":                                              "#003A4F",
+  "Headquarter Tax Office":                                "#3B1F00",
+  "Motor Licence Office":                                  "#2E3800",
+};
+
+let LOGO = 'kirslogo.jfif'; // replaced with base64 once user picks file
+
+function loadImgAsBase64(file){
+  return new Promise((res,rej)=>{
+    const r = new FileReader();
+    r.onload = () => res(r.result);
+    r.onerror = () => rej(r.error);
+    r.readAsDataURL(file);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('logoInput').addEventListener('change', async function(){
+    if(!this.files[0]) return;
+    LOGO = await loadImgAsBase64(this.files[0]);
+    document.querySelectorAll('img[data-role="logo"]').forEach(i => i.src = LOGO);
+    document.getElementById('logoStatus').textContent = '✔ Logo loaded';
+    document.getElementById('logoStatus').style.color = '#4caf50';
+  });
+});
+
+function fmt(v){ return v.toUpperCase().trim(); }
+document.getElementById('tagno').addEventListener('input',function(){ this.value=fmt(this.value); });
+
+function wm(){
+  let h='';
+  for(let i=0;i<15;i++) h+=`<div class="wmc"><img data-role="logo" src="${LOGO}" alt=""><span>KIRS</span></div>`;
+  return `<div class="wm">${h}</div>`;
+}
+
+function buildTag(dept, tag, badge){
+  return `
+  <div class="tag-card" id="tag-card">
+    ${wm()}
+    <div class="tc-header">
+      <img class="tc-header-logo" data-role="logo" src="${LOGO}" alt="KIRS">
+      <div class="tc-header-name">Kano State Internal Revenue Service</div>
+      <div class="tc-header-sub">( KIRS )</div>
+    </div>
+    <div class="tc-gold-bar"></div>
+    <div class="tc-body">
+      <div class="tc-badge" style="background:${badge}">VISITOR PASS</div>
+      <div class="tc-divider"></div>
+      <div class="tc-dept-label">Department</div>
+      <div class="tc-dept-name">${dept}</div>
+      <div class="tc-divider2"></div>
+      <div class="tc-tag-num">${tag}</div>
+      <div class="tc-sig-area">
+      </div>
+    </div>
+    <div class="tc-return">
+      <span class="tc-return-dot">◆</span>
+      <span class="tc-return-text">Return After Use</span>
+      <span class="tc-return-dot">◆</span>
+    </div>
+    <div class="tc-footer">
+      <div class="tc-footer-item"><span class="tc-footer-icon">✉</span> info@kirs.gov.ng</div>
+      <span class="tc-footer-type">VISITOR</span>
+      <div class="tc-footer-item"><span class="tc-footer-icon">🌐</span> www.kirs.gov.ng</div>
+    </div>
+  </div>`;
+}
+
+function generate(){
+  const dept = document.getElementById('dept').value;
+  const tag  = fmt(document.getElementById('tagno').value);
+  if(!dept){ alert('Please select a department.'); return; }
+  if(!tag) { alert('Please enter a tag number.'); return; }
+  const badge = DEPTS[dept] || '#0B3D2E';
+  document.getElementById('tagCard').innerHTML = buildTag(dept, tag, badge);
+  const pv = document.getElementById('pview');
+  pv.classList.add('on');
+  pv.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+async function dlTag(){
+  const btn = document.querySelector('.btn-dl');
+  btn.innerHTML = '⏳ Generating…'; btn.disabled = true;
+  try{
+    const el = document.getElementById('tag-card');
+    if(!el){ alert('Generate a tag first.'); return; }
+    const canvas = await html2canvas(el,{
+      scale:3,
+      useCORS:false,
+      allowTaint:false,
+      backgroundColor:'#ffffff',
+      logging:false,
+      imageTimeout:0,
+      removeContainer:true
+    });
+    const tag = fmt(document.getElementById('tagno').value) || 'pass';
+    const a = document.createElement('a');
+    a.download = `KIRS_Visitor_Tag_${tag}.png`;
+    a.href = canvas.toDataURL('image/png');
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => document.body.removeChild(a), 200);
+  } catch(err){
+    console.error('Download error:', err);
+    alert('Download failed: ' + err.message + '\nTry using the Print button instead.');
+  } finally {
+    btn.innerHTML = '⬇ Download Tag'; btn.disabled = false;
+  }
+}
+</script>
+</body>
+</html>
