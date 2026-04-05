@@ -592,22 +592,22 @@
 </div>
 
 <script>
-  // Department accent colors — 14 dark, deep, distinct color families
+  // Department accent colors — subtle variations keeping KIRS green base
   const DEPT_COLORS = {
-    "Executive Chairman's Office":                             { accent: "#0B3D2E" },  // 1. Dark Green
-    "Executive Director Corporate Service Group":              { accent: "#0D1F5C" },  // 2. Dark Royal Blue
-    "Executive Director Revenue Operation Group":              { accent: "#7A0000" },  // 3. Dark Red
-    "Executive Director Finance & Revenue Account Group":      { accent: "#7A5C00" },  // 4. Dark Gold
-    "Assessment Department":                                   { accent: "#3B006F" },  // 5. Dark Purple
-    "PAYE Department":                                         { accent: "#004444" },  // 6. Dark Teal
-    "Government Business Department":                          { accent: "#7A3300" },  // 7. Dark Orange
-    "Human Resource Department":                               { accent: "#5C003A" },  // 8. Dark Magenta
-    "Corporate Service Department":                            { accent: "#4A2000" },  // 9. Dark Brown
-    "Legal Services Department":                               { accent: "#1F0050" },  // 10. Dark Indigo
-    "Planning, Research & Statistics":                         { accent: "#7A0040" },  // 11. Dark Pink/Rose
-    "ICT Unit":                                                { accent: "#003A4F" },  // 12. Dark Steel Blue
-    "Headquarter Tax Office":                                  { accent: "#3B1F00" },  // 13. Dark Chocolate
-    "Motor Licence Office":                                    { accent: "#2E3800" },  // 14. Dark Olive
+    "Executive Chairman's Office":                              { accent: "#1a6b2f", tag: "#1a6b2f" },
+    "Executive Director Corporate Service Group":              { accent: "#1f5e87", tag: "#1f5e87" },
+    "Executive Director Revenue Operation Group":              { accent: "#7b3200", tag: "#7b3200" },
+    "Executive Director Finance & Revenue Account Group":      { accent: "#5a3a8a", tag: "#5a3a8a" },
+    "Assessment Department":                                   { accent: "#145222", tag: "#145222" },
+    "PAYE Department":                                         { accent: "#8a6200", tag: "#8a6200" },
+    "Government Business Department":                          { accent: "#1a5e5e", tag: "#1a5e5e" },
+    "Human Resource Department":                               { accent: "#6b3a1f", tag: "#6b3a1f" },
+    "Corporate Service Department":                            { accent: "#1a3a6b", tag: "#1a3a6b" },
+    "Legal Services Department":                               { accent: "#3a1a6b", tag: "#3a1a6b" },
+    "Planning, Research & Statistics":                         { accent: "#1a6b55", tag: "#1a6b55" },
+    "ICT Unit":                                                { accent: "#0d5c7a", tag: "#0d5c7a" },
+    "Headquarter Tax Office":                                  { accent: "#4a1a1a", tag: "#4a1a1a" },
+    "Motor Licence Office":                                    { accent: "#3d5c1a", tag: "#3d5c1a" },
   };
 
   function formatTag(val) {
@@ -706,7 +706,7 @@
     if (!dept) { alert('Please select a department.'); return; }
     if (!tag)  { alert('Please enter a tag number.'); return; }
 
-    const colors = DEPT_COLORS[dept] || { accent: '#0B3D2E' };
+    const colors = DEPT_COLORS[dept] || { accent: '#1a6b2f', tag: '#1a6b2f' };
 
     const frontHTML = buildFrontCard(dept, tag, colors);
     const backHTML  = buildBackCard(dept, tag, colors);
