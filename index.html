@@ -432,6 +432,40 @@ body{
   <!-- Controls -->
   <div class="ctrlbox">
     <div class="ctrlbox-title">Configure Pass</div>
+
+    <!-- Image loaders -->
+    <div class="frow" style="margin-bottom:16px;">
+      <div class="fg">
+        <label>Logo Image (kirslogo.jfif)</label>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <label style="
+            padding:9px 16px; background:#1a1a1a; border:1px dashed #444;
+            border-radius:6px; color:#aaa; cursor:pointer;
+            font-size:0.75rem; font-weight:700; letter-spacing:1px;
+            white-space:nowrap; text-transform:uppercase;
+          ">
+            📁 Choose Logo
+            <input type="file" id="logoInput" accept="image/*" style="display:none">
+          </label>
+          <span id="logoStatus" style="font-size:0.7rem;color:#555;letter-spacing:1px;">No file chosen</span>
+        </div>
+      </div>
+      <div class="fg">
+        <label>Signature Image (optional)</label>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <label style="
+            padding:9px 16px; background:#1a1a1a; border:1px dashed #444;
+            border-radius:6px; color:#aaa; cursor:pointer;
+            font-size:0.75rem; font-weight:700; letter-spacing:1px;
+            white-space:nowrap; text-transform:uppercase;
+          ">
+            📁 Choose Signature
+            <input type="file" id="sigInput" accept="image/*" style="display:none">
+          </label>
+          <span id="sigStatus" style="font-size:0.7rem;color:#555;letter-spacing:1px;">No file chosen</span>
+        </div>
+      </div>
+    </div>
     <div class="frow">
       <div class="fg">
         <label for="dept">Department / Unit</label>
@@ -469,9 +503,6 @@ body{
       <button class="btn-act btn-dl" onclick="dlBoth()">⬇ Download Front &amp; Back</button>
       <button class="btn-act btn-pr" onclick="window.print()">🖨 Print</button>
     </div>
-    <p id="dl-note" style="text-align:center;font-size:0.65rem;color:#555;margin-top:10px;letter-spacing:1px;">
-      Tip: Keep the logo &amp; signature files in the same folder as this HTML file for best results.
-    </p>
   </div>
 
 </div>
@@ -494,15 +525,44 @@ const DEPTS = {
   "Motor Licence Office":                                  "#2E3800",
 };
 
-const LOGO = 'kirslogo.jfif';
-const SIG  = 'signature__2_-removebg-preview.png';
+let LOGO = 'kirslogo.jfif';   // will be replaced with base64 once loaded
+let SIG  = 'signature__2_-removebg-preview.png';
+
+// Load image file → base64 data URL
+function loadImgAsBase64(file){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=()=>res(r.result);
+    r.onerror=()=>rej(r.error);
+    r.readAsDataURL(file);
+  });
+}
+
+// When user picks a logo file, embed it immediately
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('logoInput').addEventListener('change',async function(){
+    if(!this.files[0])return;
+    LOGO=await loadImgAsBase64(this.files[0]);
+    // Update any already-rendered card images live
+    document.querySelectorAll('img[data-role="logo"]').forEach(i=>i.src=LOGO);
+    document.getElementById('logoStatus').textContent='✔ Logo loaded';
+    document.getElementById('logoStatus').style.color='#4caf50';
+  });
+  document.getElementById('sigInput').addEventListener('change',async function(){
+    if(!this.files[0])return;
+    SIG=await loadImgAsBase64(this.files[0]);
+    document.querySelectorAll('img[data-role="sig"]').forEach(i=>i.src=SIG);
+    document.getElementById('sigStatus').textContent='✔ Signature loaded';
+    document.getElementById('sigStatus').style.color='#4caf50';
+  });
+});
 
 function fmt(v){ return v.toUpperCase().trim(); }
 document.getElementById('tagno').addEventListener('input',function(){this.value=fmt(this.value);});
 
 function wm(){
   let h='';
-  for(let i=0;i<12;i++) h+=`<div class="wmc"><img src="${LOGO}" alt=""><span>KIRS</span></div>`;
+  for(let i=0;i<12;i++) h+=`<div class="wmc"><img data-role="logo" src="${LOGO}" alt=""><span>KIRS</span></div>`;
   return `<div class="wm">${h}</div>`;
 }
 
@@ -512,7 +572,7 @@ function frontCard(dept,tag,badge){
     ${wm()}
     <div class="f-wrap">
       <div class="f-left">
-        <img class="f-left-logo" src="${LOGO}" alt="KIRS">
+        <img class="f-left-logo" data-role="logo" src="${LOGO}" alt="KIRS">
         <div class="f-visitor-wrap">
           <span class="f-visitor">Kano State IRS</span>
         </div>
@@ -544,7 +604,7 @@ function backCard(dept,tag,badge){
       <div class="b-strip"></div>
       <div class="b-content">
         <div class="b-logo-col">
-          <img class="b-logo" src="${LOGO}" alt="KIRS">
+          <img class="b-logo" data-role="logo" src="${LOGO}" alt="KIRS">
           <div class="b-tagnumber">${tag}</div>
         </div>
         <div class="b-vdivider"></div>
@@ -582,18 +642,10 @@ function generate(){
 async function cap(id){
   const el=document.getElementById(id);
   if(!el)return null;
-  // Hide all <img> tags temporarily to avoid cross-origin taint issues
-  const imgs=el.querySelectorAll('img');
-  const imgData=[];
-  imgs.forEach(img=>{
-    imgData.push({el:img,src:img.src,display:img.style.display});
-    img.style.display='none';
-  });
-  let canvas=null;
   try{
-    canvas=await html2canvas(el,{
+    return await html2canvas(el,{
       scale:3,
-      useCORS:true,
+      useCORS:false,
       allowTaint:false,
       backgroundColor:'#ffffff',
       logging:false,
@@ -602,10 +654,8 @@ async function cap(id){
     });
   }catch(e){
     console.warn('html2canvas error:',e);
+    return null;
   }
-  // Restore images
-  imgData.forEach(d=>{d.el.style.display=d.display;});
-  return canvas;
 }
 
 async function dlBoth(){
